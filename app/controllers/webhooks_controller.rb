@@ -9,12 +9,14 @@ class WebhooksController < ApplicationController
     score = extract_score
     if score.nil?
       Rails.logger.warn("[Webhook] No score found in request for form=#{form.code} device=#{device.id}")
+      notify_webhook_received("No score found", form: form, device: device)
       head :ok
       return
     end
 
     if score.to_i != 100
       Rails.logger.warn("[Webhook] Score validation failed: score=#{score} (expected 100) for form=#{form.code} device=#{device.id}")
+      notify_webhook_received("Score validation failed (score=#{score}, expected 100)", form: form, device: device)
       head :ok
       return
     end
@@ -23,12 +25,28 @@ class WebhooksController < ApplicationController
     submission.save!(validate: false)
 
     Rails.logger.info("[Webhook] Score=100, submission created for form=#{form.code} device=#{device.id}")
+    notify_webhook_received("Submission created (score=#{score})", form: form, device: device)
     head :ok
-  rescue ActiveRecord::RecordNotFound
+  rescue ActiveRecord::RecordNotFound => e
+    notify_webhook_received("Record not found: #{e.message}")
     head :ok
   end
 
   private
+
+  def notify_webhook_received(status, form: nil, device: nil)
+    details = {
+      status: status,
+      form_code: form&.code,
+      device_id: device&.id,
+      request_params: request.request_parameters
+    }
+
+    message = "Webhook received: #{status}\n\n#{JSON.pretty_generate(details)}"
+    NtfyService.notify(message)
+  rescue => e
+    Rails.logger.error("[Webhook] Failed to send ntfy notification: #{e.message}")
+  end
 
   def extract_score
     raw = params[:rawRequest]
