@@ -9,13 +9,13 @@ class WebhooksController < ApplicationController
     score = extract_score
     if score.nil?
       Rails.logger.warn("[Webhook] No score found in request for form=#{form.code} device=#{device.id}")
-      head :unprocessable_entity
+      head :ok
       return
     end
 
     if score.to_i != 100
       Rails.logger.warn("[Webhook] Score validation failed: score=#{score} (expected 100) for form=#{form.code} device=#{device.id}")
-      head :unprocessable_entity
+      head :ok
       return
     end
 
@@ -25,7 +25,7 @@ class WebhooksController < ApplicationController
     Rails.logger.info("[Webhook] Score=100, submission created for form=#{form.code} device=#{device.id}")
     head :ok
   rescue ActiveRecord::RecordNotFound
-    head :not_found
+    head :ok
   end
 
   private

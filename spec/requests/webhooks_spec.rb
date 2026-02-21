@@ -26,56 +26,56 @@ RSpec.describe "Webhooks", type: :request do
     end
 
     context "with score less than 100" do
-      it "does not create a submission and returns 422" do
+      it "does not create a submission but returns 200" do
         expect {
           post webhook_trigger_path(code: form.code, device_id: device.id),
             params: {rawRequest: raw_request_json("q8_score" => "60")}
         }.not_to change(Submission, :count)
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:ok)
       end
     end
 
     context "with score of 0" do
-      it "does not create a submission" do
+      it "does not create a submission but returns 200" do
         expect {
           post webhook_trigger_path(code: form.code, device_id: device.id),
             params: {rawRequest: raw_request_json("q8_score" => "0")}
         }.not_to change(Submission, :count)
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:ok)
       end
     end
 
     context "with no rawRequest param" do
-      it "does not create a submission and returns 422" do
+      it "does not create a submission but returns 200" do
         expect {
           post webhook_trigger_path(code: form.code, device_id: device.id)
         }.not_to change(Submission, :count)
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:ok)
       end
     end
 
     context "with invalid JSON in rawRequest" do
-      it "does not create a submission and returns 422" do
+      it "does not create a submission but returns 200" do
         expect {
           post webhook_trigger_path(code: form.code, device_id: device.id),
             params: {rawRequest: "not valid json{{{"}
         }.not_to change(Submission, :count)
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:ok)
       end
     end
 
     context "with no score field in rawRequest" do
-      it "does not create a submission and returns 422" do
+      it "does not create a submission but returns 200" do
         expect {
           post webhook_trigger_path(code: form.code, device_id: device.id),
             params: {rawRequest: {"q3_whichArtist" => "Ed Sheeran"}.to_json}
         }.not_to change(Submission, :count)
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:ok)
       end
     end
 
@@ -97,7 +97,7 @@ RSpec.describe "Webhooks", type: :request do
             params: {rawRequest: {"q3_score" => "100", "q10_score" => "60"}.to_json}
         }.not_to change(Submission, :count)
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:ok)
       end
 
       it "passes when the highest numbered score is 100" do
@@ -111,20 +111,24 @@ RSpec.describe "Webhooks", type: :request do
     end
 
     context "with invalid form code" do
-      it "returns 404" do
-        post webhook_trigger_path(code: "NONEXISTENT1", device_id: device.id),
-          params: {rawRequest: raw_request_json}
+      it "does not create a submission but returns 200" do
+        expect {
+          post webhook_trigger_path(code: "NONEXISTENT1", device_id: device.id),
+            params: {rawRequest: raw_request_json}
+        }.not_to change(Submission, :count)
 
-        expect(response).to have_http_status(:not_found)
+        expect(response).to have_http_status(:ok)
       end
     end
 
     context "with invalid device id" do
-      it "returns 404" do
-        post webhook_trigger_path(code: form.code, device_id: "NONEXISTENT1"),
-          params: {rawRequest: raw_request_json}
+      it "does not create a submission but returns 200" do
+        expect {
+          post webhook_trigger_path(code: form.code, device_id: "NONEXISTENT1"),
+            params: {rawRequest: raw_request_json}
+        }.not_to change(Submission, :count)
 
-        expect(response).to have_http_status(:not_found)
+        expect(response).to have_http_status(:ok)
       end
     end
   end
