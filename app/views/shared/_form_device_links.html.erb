@@ -19,6 +19,7 @@
       <th>Form</th>
       <th>Link</th>
       <th>QR</th>
+      <th>Webhook URL</th>
     </tr>
   </thead>
   <tbody>
@@ -50,12 +51,15 @@
                 <%= image_tag form_qr_code_path(form_code, device.id, size: 200), alt: "QR Code", width: 200, height: 200 %>
               <% end %>
             </td>
+            <td>
+              <code class="webhook-url"><%= webhook_trigger_url(form_code, device.id) %></code>
+            </td>
           </tr>
         <% end %>
       <% end %>
     <% else %>
       <tr>
-        <td colspan="4">No forms or devices available.</td>
+        <td colspan="5">No forms or devices available.</td>
       </tr>
     <% end %>
   </tbody>

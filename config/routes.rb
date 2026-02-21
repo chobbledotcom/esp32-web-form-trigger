@@ -16,6 +16,9 @@ Rails.application.routes.draw do
     end
   end
 
+  # Webhook trigger (e.g. from Jotform quiz pass)
+  post "webhooks/trigger/:code/:device_id", to: "webhooks#trigger", as: "webhook_trigger"
+
   # Public form routes
   get "form/:code/:device_id", to: "public_forms#show", as: "public_form"
   post "form/:code/:device_id", to: "public_forms#create"
