@@ -14,9 +14,9 @@ class WebhooksController < ApplicationController
       return
     end
 
-    if score.to_i != 100
-      Rails.logger.warn("[Webhook] Score validation failed: score=#{score} (expected 100) for form=#{form.code} device=#{device.id}")
-      notify_webhook_received("Score validation failed (score=#{score}, expected 100)", form: form, device: device)
+    if score.to_i < 100
+      Rails.logger.warn("[Webhook] Score validation failed: score=#{score} (expected >= 100) for form=#{form.code} device=#{device.id}")
+      notify_webhook_received("Score validation failed (score=#{score}, expected >= 100)", form: form, device: device)
       head :ok
       return
     end
@@ -24,7 +24,7 @@ class WebhooksController < ApplicationController
     submission = form.submissions.build(device: device)
     submission.save!(validate: false)
 
-    Rails.logger.info("[Webhook] Score=100, submission created for form=#{form.code} device=#{device.id}")
+    Rails.logger.info("[Webhook] Score=#{score} (>=100), submission created for form=#{form.code} device=#{device.id}")
     notify_webhook_received("Submission created (score=#{score})", form: form, device: device)
     head :ok
   rescue ActiveRecord::RecordNotFound => e
@@ -54,11 +54,11 @@ class WebhooksController < ApplicationController
 
     data = JSON.parse(raw)
 
-    # Find all q{N}_score keys and pick the highest numbered one (last question)
-    score_keys = data.keys.select { |k| k.match?(/\Aq\d+_score\z/) }
+    # Find all q{N}_* keys containing "score" (case-insensitive) and pick the highest numbered one
+    score_keys = data.keys.select { |k| k.match?(/\Aq\d+_/i) && k.match?(/score/i) }
     return nil if score_keys.empty?
 
-    last_score_key = score_keys.max_by { |k| k.match(/\Aq(\d+)_score\z/)[1].to_i }
+    last_score_key = score_keys.max_by { |k| k.match(/\Aq(\d+)_/)[1].to_i }
     data[last_score_key]
   rescue JSON::ParserError => e
     Rails.logger.warn("[Webhook] Failed to parse rawRequest JSON: #{e.message}")
