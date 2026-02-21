@@ -25,6 +25,17 @@ RSpec.describe "Webhooks", type: :request do
       end
     end
 
+    context "with score over 100" do
+      it "creates a submission and returns 200" do
+        expect {
+          post webhook_trigger_path(code: form.code, device_id: device.id),
+            params: {rawRequest: raw_request_json("q8_score" => "120")}
+        }.to change(Submission, :count).by(1)
+
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
     context "with score less than 100" do
       it "does not create a submission but returns 200" do
         expect {
@@ -90,6 +101,28 @@ RSpec.describe "Webhooks", type: :request do
       end
     end
 
+    context "with totalScore field name" do
+      it "matches q30_totalScore" do
+        expect {
+          post webhook_trigger_path(code: form.code, device_id: device.id),
+            params: {rawRequest: {"q30_totalScore" => "100"}.to_json}
+        }.to change(Submission, :count).by(1)
+
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
+    context "with capitalized Score field name" do
+      it "matches q13_Score" do
+        expect {
+          post webhook_trigger_path(code: form.code, device_id: device.id),
+            params: {rawRequest: {"q13_Score" => "100"}.to_json}
+        }.to change(Submission, :count).by(1)
+
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
     context "with multiple score fields picks the last question" do
       it "uses the highest numbered score field" do
         expect {
@@ -104,6 +137,15 @@ RSpec.describe "Webhooks", type: :request do
         expect {
           post webhook_trigger_path(code: form.code, device_id: device.id),
             params: {rawRequest: {"q3_score" => "60", "q10_score" => "100"}.to_json}
+        }.to change(Submission, :count).by(1)
+
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "picks highest numbered among mixed field name styles" do
+        expect {
+          post webhook_trigger_path(code: form.code, device_id: device.id),
+            params: {rawRequest: {"q3_score" => "50", "q30_totalScore" => "100"}.to_json}
         }.to change(Submission, :count).by(1)
 
         expect(response).to have_http_status(:ok)
