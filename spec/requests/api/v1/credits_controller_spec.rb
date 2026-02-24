@@ -109,43 +109,39 @@ RSpec.describe "API V1 Credits", type: :request do
           )
         end
 
-        context "with token validity checks" do
-          it "only claims submissions within the token validity period" do
-            # Create a form with short validity period
-            short_form = create_form(name: "Short Validity Form", token_validity_seconds: 30)
-            device.forms << short_form
-
-            # Create submissions with different ages
-            old_submission = create_submission_with_age(short_form, device, 1.hour, name: "Old User")
-            recent_submission = create_submission(short_form, device, name: "Recent User")
+        context "with old submissions" do
+          it "claims old unclaimed submissions regardless of age" do
+            old_submission = create_submission_with_age(form, device, 1.hour, name: "Old User")
 
             subject
 
-            # Recent submission should be claimed, old one should not
-            expect(recent_submission.reload.credit_claimed).to eq(true)
-            expect(old_submission.reload.credit_claimed).to eq(false)
+            expect(old_submission.reload.credit_claimed).to eq(true)
             expect(json_response["source"]).to eq("submission")
           end
 
-          it "respects each form's token validity period" do
-            # Create forms with different validity periods
-            short_form = create_form(name: "Short Form", token_validity_seconds: 30)
-            long_form = create_form(name: "Long Form", token_validity_seconds: 86400) # 1 day
-
-            # Associate both with device
-            device.forms << short_form
-            device.forms << long_form
-
-            # Create submissions for both forms, both 1 hour old
-            old_short = create_submission_with_age(short_form, device, 1.hour, name: "Old Short")
-            old_long = create_submission_with_age(long_form, device, 1.hour, name: "Old Long")
+          it "claims oldest unclaimed submission first" do
+            old_submission = create_submission_with_age(form, device, 1.hour, name: "Old User")
+            recent_submission = create_submission(form, device, name: "Recent User")
 
             subject
 
-            # Long form submission should be claimed (within 24h validity)
-            # Short form submission should not be claimed (outside 30s validity)
-            expect(old_long.reload.credit_claimed).to eq(true)
-            expect(old_short.reload.credit_claimed).to eq(false)
+            # Oldest should be claimed first
+            expect(old_submission.reload.credit_claimed).to eq(true)
+            expect(recent_submission.reload.credit_claimed).to eq(false)
+          end
+        end
+
+        context "with webhook-created submissions" do
+          it "claims submissions created without validation (as webhooks do)" do
+            # Simulate how the webhook creates submissions: build + save!(validate: false)
+            submission = form.submissions.build(device: device)
+            submission.save!(validate: false)
+
+            subject
+
+            expect(submission.reload.credit_claimed).to eq(true)
+            expect(response).to have_http_status(:success)
+            expect(json_response["source"]).to eq("submission")
           end
         end
 
