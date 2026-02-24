@@ -1,16 +1,55 @@
 import machine
 import time
-import urequests
 
-from wifi import wifi_init
-from opto_control import activate_opto
-from post_request import post_request
-from led_control import boot_sequence_flash, BOOT_START, BOOT_WIFI_START, BOOT_WIFI_CONNECTED, BOOT_FIRST_RESPONSE
-from config import (
-    OPTO_PIN,
-    BUTTON_PIN,
-    POST_INTERVAL,
-)
+print("main.py: Starting imports...")
+
+try:
+    import urequests
+    print("  urequests OK")
+except ImportError as e:
+    print("  MISSING: urequests -", e)
+    raise
+
+try:
+    from wifi import wifi_init
+    print("  wifi OK")
+except ImportError as e:
+    print("  MISSING: wifi.py -", e)
+    raise
+
+try:
+    from opto_control import activate_opto
+    print("  opto_control OK")
+except ImportError as e:
+    print("  MISSING: opto_control.py -", e)
+    raise
+
+try:
+    from post_request import post_request
+    print("  post_request OK")
+except ImportError as e:
+    print("  MISSING: post_request.py -", e)
+    raise
+
+try:
+    from led_control import boot_sequence_flash, BOOT_START, BOOT_WIFI_START, BOOT_WIFI_CONNECTED, BOOT_FIRST_RESPONSE
+    print("  led_control OK")
+except ImportError as e:
+    print("  MISSING: led_control.py -", e)
+    raise
+
+try:
+    from config import (
+        OPTO_PIN,
+        BUTTON_PIN,
+        POST_INTERVAL,
+    )
+    print("  config OK")
+except ImportError as e:
+    print("  MISSING: config.py -", e)
+    raise
+
+print("main.py: All imports successful")
 
 try:
     # Boot sequence - Stage 1: Program starts loading
