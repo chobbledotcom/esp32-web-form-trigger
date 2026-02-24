@@ -57,11 +57,21 @@ module Api
         end
 
         # First try to claim a normal submission credit
-        # Get the oldest unclaimed submission for this device
-        submission = Submission.unclaimed
+        # Use the token_validity_seconds from the form to determine how recent the submission must be
+        # Get unclaimed submissions for this device, ordered by creation time (oldest first)
+        unclaimed_submissions = Submission.unclaimed
           .for_device(device.id)
           .order(created_at: :asc)
-          .first
+
+        submission = nil
+        # Check each submission against its form's token_validity_seconds
+        unclaimed_submissions.each do |sub|
+          form = sub.form
+          if sub.created_at > form.token_validity_seconds.seconds.ago
+            submission = sub
+            break
+          end
+        end
 
         if submission
           submission.mark_as_claimed!
