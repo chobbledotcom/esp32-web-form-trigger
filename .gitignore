@@ -34,6 +34,27 @@ config/master.key
 /.bundle
 /vendor/bundle
 
+# Ignore generated gem binstubs (only track project-specific ones)
+/bin/dotenv
+/bin/htmldiff
+/bin/irb
+/bin/ldiff
+/bin/nokogiri
+/bin/puma
+/bin/pumactl
+/bin/racc
+/bin/rackup
+/bin/rdbg
+/bin/rdoc
+/bin/redcarpet
+/bin/ri
+/bin/rspec
+/bin/ruby-parse
+/bin/ruby-rewrite
+/bin/sprockets
+/bin/standardrb
+/bin/thor
+
 # these should all be checked in to normalize the environment:
 # Gemfile.lock, .ruby-version, .ruby-gemset
 

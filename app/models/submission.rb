@@ -14,19 +14,19 @@ class Submission < ApplicationRecord
   scope :recent, ->(seconds) { where("created_at > ?", seconds.seconds.ago) }
 
   def mark_as_claimed!
-    update!(credit_claimed: true)
+    update_column(:credit_claimed, true)
   end
 
   def reset_credit!
-    update!(credit_claimed: false)
+    update_column(:credit_claimed, false)
   end
 
   def mark_as_emailed!
-    update!(email_status: "sent", emailed_at: Time.current)
+    update_columns(email_status: "sent", emailed_at: Time.current)
   end
 
   def mark_as_failed!(error_message = nil)
-    update!(
+    update_columns(
       email_status: "failed",
       failure_reason: error_message
     )
